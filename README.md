@@ -1,52 +1,75 @@
 ---
 
-# 🛰️ Satellite Simulator Advanced
+# 🛰️ Satellite Simulator Advanced v1.1
 
-A terminal-based satellite simulation written in **Python**, featuring orbital mechanics, subsystem management, telemetry, ground station interaction, and AI-assisted autonomous control.
-The simulation uses **asyncio** for concurrency and **rich** for a live, interactive console dashboard.
+A next-generation, terminal-based **satellite operations simulator** written in Python.
+It models real-time orbital mechanics, power systems, subsystem behavior, ground station communications, and AI-driven autonomous control — now with improved physics, stability, and realism.
+
+The simulation uses **`asyncio`** for concurrency and **`rich`** for a live, interactive dashboard.
 
 ---
 
-## ✨ Features
+## ✨ What's New in v1.1
 
-* **Satellite Subsystems**
+* ✅ **Per-tick stability:** Radiation and solar calculations are now sampled once per simulation tick.
+* 🌍 **Physics overhaul:** Orbital dynamics now evolve based on simulation time (`dt`) — no more jumpy motion.
+* 🧠 **Smarter AI:** Hysteresis-based mode switching, gradual subsystem recovery, and improved reboot logic.
+* ⚙️ **More realistic environment:**
 
-  * Communications (COMMS)
-  * Radar
-  * Camera
-  * Thermal Control
-  * Attitude Control
-  * Propulsion
+  * Ground-station visibility windows (no more 24/7 link)
+  * Radiation spikes and solar effects influence subsystems and energy systems consistently
+* ⚡ **Better power modeling:** Battery degradation, panel efficiency loss, and thermal dynamics scale with time.
+* 📊 **Telemetry & reporting:** Optional CSV export and an end-of-run performance summary.
+* 🔄 **New CLI options:** `--seed`, `--timescale`, `--csv`, `--scenario`, `--deterministic`
+* 📶 **Comms improvements:** Backpressure on telemetry link and prioritized uplink queue prevent overload.
+* 🪵 **Logging system:** Rewritten with a background worker and queue for more reliable file logging.
 
-* **Space Environment Simulation**
+---
 
-  * Orbit tracking (latitude/longitude/altitude)
-  * Day/night cycle with solar incidence factor
-  * Variable solar radiation & solar flares
-  * Micrometeorite impacts
+## 🛰️ Core Features
 
-* **Energy System**
+### 🧩 Satellite Subsystems
 
-  * Battery with health degradation, cycle tracking, and voltage modeling
-  * Solar panels with deploy/stow, damage, and efficiency degradation
+* **COMMS:** Communication and telemetry
+* **Radar / Camera:** Payload instruments
+* **Thermal Control:** Body temperature management
+* **Attitude Control:** Orientation handling
+* **Propulsion:** Orbit adjustment and maneuvers
 
-* **Ground Station Link**
+### ☀️ Space Environment
 
-  * Telemetry downlink (with packet loss possibility)
-  * Uplink commands (e.g., `PING`, `REQUEST_STATUS`, `DEPLOY_SOLAR`, `SET_POWER_MODE conserve`)
-  * Automated ground station agent issuing recovery actions
+* Real-time orbit tracking (lat/lon/alt)
+* Day/night cycle with solar incidence
+* Variable solar radiation, flares, and micrometeorite impacts
+* **Ground-station visibility windows** for realistic link sessions
 
-* **AI Controller**
+### 🔋 Power System
 
-  * Automatic mode switching (`NOMINAL` ↔ `CONSERVE`)
-  * Responds to critical conditions like low battery or high radiation
-  * Attempts subsystem reboots
+* Detailed battery modeling (health, voltage, cycle life, degradation)
+* Solar panels with deploy/stow, damage, and radiation-linked efficiency loss
 
-* **Interactive Rich UI**
+### 📡 Ground Link & Commands
 
-  * Live updating dashboard with telemetry, power, subsystems, and logs
-  * Event log with color-coded severity
-  * Summary footer with system mode, battery, solar, and radiation
+* Telemetry downlink with realistic packet loss
+* Command uplink with priority scheduling and capacity limits
+* Built-in ground-station agent that analyzes telemetry and issues corrective actions automatically
+
+### 🧠 AI Controller
+
+* Autonomous switching between `NOMINAL` and `CONSERVE` power modes
+* Smart recovery logic for failed subsystems
+* Radiation-aware load shedding
+* Gradual subsystem reactivation
+
+### 🖥️ Interactive Dashboard
+
+* Real-time **Rich** interface with:
+
+  * Telemetry view
+  * Subsystem status panel
+  * Power and thermal graphs
+  * Event log (color-coded severity)
+* Live summary of mode, power, solar generation, and environment
 
 ---
 
@@ -67,47 +90,54 @@ pip install -r requirements.txt
 
 ## 🖥️ Usage
 
-Run the simulation with default parameters:
+Run the simulator with defaults:
 
 ```bash
 python simulator.py
 ```
 
-Available options:
+Or customize:
 
 ```bash
-python simulator.py --duration 180 --update 0.5
+python simulator.py --duration 300 --update 0.5 --seed 42 --csv run.csv
 ```
 
-* `--duration` → total simulation time in seconds (default `120`)
-* `--update` → dashboard update interval in seconds (default `1.0`)
+**Main options:**
 
-Stop anytime with **Ctrl+C**.
+| Option            | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| `--duration`      | Total simulation time in seconds (default: 120)    |
+| `--update`        | UI update interval in seconds (default: 1.0)       |
+| `--seed`          | Set random seed for reproducibility                |
+| `--timescale`     | Accelerate or slow down the simulation             |
+| `--csv`           | Export telemetry to a CSV file                     |
+| `--scenario`      | Load external scenario configuration (JSON)        |
+| `--deterministic` | Run with deterministic behavior (no random jitter) |
 
 ---
 
 ## 📡 Commands
 
-The ground station agent (or manual uplink) can send commands such as:
+Ground station agent or manual uplink can send:
 
-* `PING` → Satellite responds with `PONG`
-* `REQUEST_STATUS` → Sends back latest telemetry
-* `SET_POWER_MODE conserve|nominal` → Adjusts power consumption strategy
-* `DEPLOY_SOLAR` → Deploy or re-enable solar panels
-* `STOW_SOLAR` → Stow solar panels
-* `REBOOT_COMMS` → Attempt to reboot communications
-* `ADJUST_ORBIT delta_alt=X` → Adjust orbit altitude
-
----
-
-## 📂 Logs
-
-* Live logs are displayed in the **Event Log panel**.
-* All logs are also written asynchronously to `simulation.log`.
+* `PING` – Satellite replies `PONG`
+* `REQUEST_STATUS` – Send latest telemetry
+* `SET_POWER_MODE conserve|nominal` – Adjust power strategy
+* `DEPLOY_SOLAR` / `STOW_SOLAR` – Control solar panels
+* `REBOOT_COMMS` – Attempt communications reboot
+* `ADJUST_ORBIT delta_alt=X` – Change orbital altitude
 
 ---
 
-## 🧠 Architecture Overview
+## 📂 Logs & Data
+
+* Live logs shown in the **Event Log panel**.
+* All logs stored asynchronously in `simulation.log`.
+* Optional CSV telemetry export for long-term analysis.
+
+---
+
+## 📊 Simulation Architecture
 
 ```
 [ SpaceEnvironment ] 
@@ -122,16 +152,27 @@ The ground station agent (or manual uplink) can send commands such as:
 
 ---
 
-## 📝 License
+## 📈 End-of-Run Summary
 
-MIT License – feel free to modify and use for research, teaching, or fun simulations.
+At the end of a run, the simulator prints a mission summary including:
+
+* Battery min/avg/max
+* Total solar energy produced
+* Total load consumed
+* Link uptime
+* Number of subsystem failures and recoveries
 
 ---
+
+## 📝 License
+
+MIT License – use, modify, and build upon this simulator for research, education, or hobby projects.
+
+---
+
 ## 📬 Contact
 
-If you have new ideas, suggestions, or want to get in touch:
-
-* **Email**: [lloydlewizzz@gmail.com](mailto:lloydlewizzz@gmail.com)
-* **Discord**: `lloydlewizzz` 
+* **Email:** [lloydlewizzz@gmail.com](mailto:lloydlewizzz@gmail.com)
+* **Discord:** `lloydlewizzz`
 
 ---
